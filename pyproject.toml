@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "suede-ai"
+version = "0.1.0a1"
+description = "Python SDK for the Suede AI x402 surface (17 pay-per-call endpoints, USDC on Base)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Suede AI", email = "hello@suedeai.ai" },
+]
+keywords = [
+    "suede",
+    "suede-ai",
+    "x402",
+    "agent-commerce",
+    "usdc",
+    "base",
+    "music",
+    "ai",
+    "eip-3009",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "httpx>=0.27",
+    "eth-account>=0.10",
+    "pydantic>=2.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "mypy>=1.10",
+    "ruff>=0.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/Suede-AI/suede-sdk-python"
+Repository = "https://github.com/Suede-AI/suede-sdk-python"
+Issues = "https://github.com/Suede-AI/suede-sdk-python/issues"
+"x402 manifest" = "https://app.suedeai.ai/.well-known/x402.json"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/suede_ai"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
