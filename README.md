@@ -1,6 +1,6 @@
 # suede-ai
 
-[![PyPI](https://img.shields.io/badge/pypi-coming%20soon-yellow)](https://pypi.org/project/suede-ai/)
+[![PyPI](https://img.shields.io/pypi/v/suede-ai)](https://pypi.org/project/suede-ai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![x402](https://img.shields.io/badge/x402-eip--3009-purple)](https://app.suedeai.ai/.well-known/x402.json)
 
