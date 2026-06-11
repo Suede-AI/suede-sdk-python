@@ -1,10 +1,12 @@
 # suede-ai
 
 [![PyPI](https://img.shields.io/pypi/v/suede-ai)](https://pypi.org/project/suede-ai/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/suede-ai)](https://pypi.org/project/suede-ai/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/suede-ai)](https://pypi.org/project/suede-ai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![x402](https://img.shields.io/badge/x402-eip--3009-purple)](https://app.suedeai.ai/.well-known/x402.json)
 
-Python SDK for the [Suede AI](https://suedeai.ai) **x402** surface — 17 pay-per-call endpoints settled in USDC on Base. No API keys. No subscriptions. Just sign an EIP-3009 authorization and call the endpoint.
+**Python SDK for [Suede AI](https://suedeai.ai)** — x402 pay-per-call music generation, stem splitting, MIDI transcription, mastering, lyric sync, and IP-registry lookups. 17 endpoints settled in USDC on Base. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the endpoint.
 
 The SDK wraps the 402-challenge / sign / retry loop so your agent code spends its time writing creative prompts, not encoding typed data.
 
@@ -104,10 +106,13 @@ manifest = suede.manifest()  # free — no payment required
 - Async client (`AsyncSuedeClient`) once OpenAPI lands
 - Pydantic response models per endpoint
 - `examples/` folder: LangChain tool wrappers, CrewAI tasks, agentcash adapter
-- PyPI publish
 
 See the [0.1.0 release checklist](https://github.com/Suede-AI/suede-sdk-python/issues/1).
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+---
+
+Built by [Jason Colapietro](https://github.com/JasonColapietro) · [Suede Labs AI](https://suedeai.ai) · [x402 manifest](https://app.suedeai.ai/.well-known/x402.json)

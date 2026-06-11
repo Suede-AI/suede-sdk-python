@@ -5,23 +5,32 @@ build-backend = "hatchling.build"
 [project]
 name = "suede-ai"
 version = "0.1.0"
-description = "Python SDK for the Suede AI x402 surface (17 pay-per-call endpoints, USDC on Base)"
+description = "Python SDK for Suede AI — x402 pay-per-call music generation, stem splitting, MIDI, mastering, and IP-registry lookups settled in USDC on Base. No API keys."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Suede AI", email = "hello@suedeai.ai" },
+    { name = "Jason Colapietro", email = "jasoncola1@gmail.com" },
+]
+maintainers = [
+    { name = "Jason Colapietro", email = "jasoncola1@gmail.com" },
 ]
 keywords = [
     "suede",
     "suede-ai",
     "x402",
     "agent-commerce",
+    "micropayments",
     "usdc",
     "base",
-    "music",
-    "ai",
+    "music-generation",
+    "ai-music",
+    "stem-splitting",
+    "midi-transcription",
     "eip-3009",
+    "web3",
+    "agent",
+    "programmable-ip",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -33,6 +42,11 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Multimedia :: Sound/Audio :: Conversion",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Office/Business :: Financial",
 ]
 dependencies = [
     "httpx>=0.27",
@@ -50,9 +64,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Suede-AI/suede-sdk-python"
+Homepage = "https://suedeai.ai"
+Documentation = "https://github.com/Suede-AI/suede-sdk-python#readme"
 Repository = "https://github.com/Suede-AI/suede-sdk-python"
 Issues = "https://github.com/Suede-AI/suede-sdk-python/issues"
+Changelog = "https://github.com/Suede-AI/suede-sdk-python/releases"
 "x402 manifest" = "https://app.suedeai.ai/.well-known/x402.json"
 
 [tool.hatch.build.targets.wheel]
