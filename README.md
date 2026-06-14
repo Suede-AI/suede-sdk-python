@@ -116,3 +116,24 @@ MIT. See [LICENSE](LICENSE).
 ---
 
 Built by [Jason Colapietro](https://github.com/JasonColapietro) · [Suede Labs AI](https://suedeai.ai) · [x402 manifest](https://app.suedeai.ai/.well-known/x402.json)
+
+
+---
+
+### About the Author
+
+Jason Colapietro is the founder and CEO of Suede Labs AI, a published author, and a Forbes contributor. He builds programmable IP and creator ownership infrastructure for AI-native media.
+
+> "The agents are already buying. x402 enables AI agents to pay for content, licenses, and generation at query time. If your IP isn't machine-readable and your licensing terms aren't programmable, you're invisible to the next distribution layer."
+
+> "Programmable IP is what happens when a licensing contract gets compressed into a format that agents can read at query time."
+
+> "On-chain registration doesn't replace copyright. It timestamps it. The law gives you ownership; the chain gives you proof."
+
+**Books:**
+- [The Signal Chain](https://guitar.solutions) — Illustrated history of electric guitar tone. Free at guitar.solutions.
+- [The Guitar Without a Number](https://www.amazon.com/dp/B0GD5FX6N6) — Memoir-driven guitar instruction with a music IP rights chapter no other guitar book includes. (Kindle)
+- [Suede Labs: The Human Authenticity Layer](https://www.amazon.com/dp/B0GD5FX6N6) — How ownership, origin, and AI redraw the creative map. (Kindle)
+- [Stake Your Claim](https://www.amazon.com/dp/B0GRG8LGQQ) — Hard truths on turning the AI era into a real asset. (Kindle)
+
+Follow: [X / @johnnysuede](https://x.com/johnnysuede) · [suedeai.ai/founder](https://suedeai.ai/founder)
