@@ -6,11 +6,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![x402](https://img.shields.io/badge/x402-eip--3009-purple)](https://app.suedeai.ai/.well-known/x402.json)
 
-**Python SDK for [Suede AI](https://suedeai.ai)** — x402 pay-per-call music generation, stem splitting, MIDI transcription, mastering, lyric sync, and IP-registry lookups. 17 endpoints settled in USDC on Base. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the endpoint.
+**Python SDK for [Suede AI](https://suedeai.ai)** — x402 pay-per-call music generation, stem splitting, MIDI transcription, mastering, lyric sync, IP-registry lookups, and guitar rig tools. 22 endpoints settled in USDC on Base. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the endpoint.
 
 The SDK wraps the 402-challenge / sign / retry loop so your agent code spends its time writing creative prompts, not encoding typed data.
 
-> **Status:** Alpha scaffold. Endpoint signatures track the live manifest at <https://app.suedeai.ai/.well-known/x402.json>. Once the OpenAPI spec covers all 17 endpoints, codegen will finish typing the request/response models.
+> **Status:** Alpha. Endpoint signatures track the live manifest at <https://app.suedeai.ai/.well-known/x402.json>. Once the OpenAPI spec covers all 22 endpoints, codegen will finish typing the request/response models.
 
 ## Install
 
@@ -39,7 +39,7 @@ with SuedeClient(wallet_private_key=PRIVATE_KEY) as suede:
 
 The first call returns 402 with the x402 challenge. The SDK signs an EIP-3009 `transferWithAuthorization` for USDC on Base, replays with `X-PAYMENT`, and returns the JSON body. You never touch the typed data.
 
-## The 17 endpoints
+## The 22 endpoints
 
 | Method                      | Endpoint                       | Price (USDC) | What it does                                          |
 | --------------------------- | ------------------------------ | ------------ | ----------------------------------------------------- |
@@ -60,6 +60,11 @@ The first call returns 402 with the x402 challenge. The SDK signs an EIP-3009 `t
 | `style_coach`               | `POST /v1/style-coach`         | 0.02         | Expand short tags into a prompt-ready style brief     |
 | `rights_lookup`             | `GET  /v1/rights/{assetHash}`  | 0.005        | Suede Registry attestation lookup (owner / IP / NFT)  |
 | `analyze`                   | `POST /v1/analyze`             | 0.003        | BPM / key / mode / energy / danceability              |
+| `prompt_analyze`            | `POST /v1/prompt-analyze`      | 0.003        | Extract genre, mood, instrumentation from a prompt    |
+| `chain_chat`                | `POST /v1/chain-chat`          | 0.02         | Plain-language Q&A about on-chain rights/royalties    |
+| `rig_analyze`               | `POST /v1/rig-analyze`         | 0.10         | Infer guitar signal chain from audio                  |
+| `rig_oracle`                | `POST /v1/rig-oracle`          | 0.10         | Recommend a full guitar rig for a target tone         |
+| `rig_roast`                 | `POST /v1/rig-roast`           | 0.05         | Roast a gear list                                     |
 
 Prices are sourced from the live manifest at the time of writing and are enforced server-side.
 
