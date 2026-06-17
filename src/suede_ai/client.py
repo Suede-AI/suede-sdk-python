@@ -4,7 +4,7 @@ The client wraps the 402-challenge / sign / retry loop so callers can spend
 their time writing creative prompts rather than signing EIP-3009 typed data.
 
 Each endpoint exposed by the live manifest at
-``https://app.suedeai.ai/.well-known/x402.json`` has a typed method below.
+``https://app.suedeai.xyz/.well-known/x402.json`` has a typed method below.
 Pricing is enforced server-side; client-side amounts shown in docstrings
 are sourced from the manifest at the time of writing and may change.
 """
@@ -22,7 +22,7 @@ from suede_ai.x402 import (
     sign_payment,
 )
 
-DEFAULT_BASE_URL = "https://app.suedeai.ai"
+DEFAULT_BASE_URL = "https://app.suedeai.xyz"
 DEFAULT_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
 MANIFEST_PATH = "/.well-known/x402.json"
 
@@ -33,7 +33,7 @@ class SuedeClient:
     Args:
         wallet_private_key: Hex-encoded private key (with or without ``0x`` prefix).
             Used to sign EIP-3009 authorizations for USDC on Base.
-        base_url: Override for the API host. Defaults to ``https://app.suedeai.ai``.
+        base_url: Override for the API host. Defaults to ``https://app.suedeai.xyz``.
         http_client: Optional pre-configured :class:`httpx.Client`. If provided,
             ``base_url`` and ``timeout`` are ignored on this argument.
         timeout: Per-request timeout. Defaults to 60s read / 10s connect.
@@ -64,7 +64,7 @@ class SuedeClient:
         self._http = http_client or httpx.Client(
             base_url=self._base_url,
             timeout=timeout or DEFAULT_TIMEOUT,
-            headers={"User-Agent": "suede-ai-python/0.1.0a1"},
+            headers={"User-Agent": "suede-ai-python/0.3.0"},
         )
         self._max_payment_attempts = max_payment_attempts
 
@@ -327,6 +327,47 @@ class SuedeClient:
     def analyze(self, *, audio_url: str) -> dict[str, Any]:
         """``POST /v1/analyze`` — BPM/key/mode/energy analysis (0.003 USDC)."""
         return self.request("POST", "/v1/analyze", json={"audioUrl": audio_url})
+
+    def prompt_analyze(self, *, prompt: str) -> dict[str, Any]:
+        """``POST /v1/prompt-analyze`` — extract genre, mood, instrumentation from a prompt (0.003 USDC)."""
+        return self.request("POST", "/v1/prompt-analyze", json={"prompt": prompt})
+
+    def chain_chat(self, *, question: str, asset_hash: str) -> dict[str, Any]:
+        """``POST /v1/chain-chat`` — plain-language Q&A about on-chain rights/royalties (0.02 USDC)."""
+        clean = asset_hash[2:] if asset_hash.startswith("0x") else asset_hash
+        return self.request("POST", "/v1/chain-chat", json={"question": question, "assetHash": clean})
+
+    # Guitar rig tools -----------------------------------------------------
+    def rig_analyze(self, *, audio_url: str) -> dict[str, Any]:
+        """``POST /v1/rig/analyze`` — infer guitar signal chain from audio (0.10 USDC)."""
+        return self.request("POST", "/v1/rig/analyze", json={"audioUrl": audio_url})
+
+    def rig_oracle(
+        self,
+        *,
+        goal: str,
+        genre: str | None = None,
+        budget_usd: float | None = None,
+    ) -> dict[str, Any]:
+        """``POST /v1/rig/oracle`` — recommend a full guitar rig for a target tone (0.10 USDC)."""
+        body: dict[str, Any] = {"goal": goal}
+        if genre:
+            body["genre"] = genre
+        if budget_usd is not None:
+            body["budgetUsd"] = budget_usd
+        return self.request("POST", "/v1/rig/oracle", json=body)
+
+    def rig_roast(
+        self,
+        *,
+        goal: str,
+        gear: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """``POST /v1/rig/roast`` — roast a gear list for laughs (0.05 USDC)."""
+        body: dict[str, Any] = {"goal": goal}
+        if gear:
+            body["gear"] = gear
+        return self.request("POST", "/v1/rig/roast", json=body)
 
 
 def _safe_json(response: httpx.Response) -> dict[str, Any]:
