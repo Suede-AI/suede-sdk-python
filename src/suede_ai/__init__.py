@@ -1,6 +1,6 @@
 """Suede AI Python SDK.
 
-A starter SDK for the Suede AI x402 surface — 17 pay-per-call endpoints
+A starter SDK for the Suede AI x402 surface — 22 pay-per-call endpoints
 settled in USDC on Base. The client wraps the EIP-3009 sign-retry loop
 so callers can spend their time writing prompts, not signing typed data.
 
@@ -19,4 +19,4 @@ from suede_ai.client import SuedeClient
 from suede_ai.x402 import PaymentRequired, X402Error
 
 __all__ = ["SuedeClient", "PaymentRequired", "X402Error"]
-__version__ = "0.1.0a1"
+__version__ = "0.2.0"

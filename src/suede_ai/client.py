@@ -64,7 +64,7 @@ class SuedeClient:
         self._http = http_client or httpx.Client(
             base_url=self._base_url,
             timeout=timeout or DEFAULT_TIMEOUT,
-            headers={"User-Agent": "suede-ai-python/0.1.0a1"},
+            headers={"User-Agent": "suede-ai-python/0.2.0"},
         )
         self._max_payment_attempts = max_payment_attempts
 
@@ -327,6 +327,50 @@ class SuedeClient:
     def analyze(self, *, audio_url: str) -> dict[str, Any]:
         """``POST /v1/analyze`` — BPM/key/mode/energy analysis (0.003 USDC)."""
         return self.request("POST", "/v1/analyze", json={"audioUrl": audio_url})
+
+    def prompt_analyze(self, *, prompt: str) -> dict[str, Any]:
+        """``POST /v1/prompt-analyze`` — extract genre, mood, instrumentation from a prompt (0.003 USDC)."""
+        return self.request("POST", "/v1/prompt-analyze", json={"prompt": prompt})
+
+    def chain_chat(self, *, question: str, asset_hash: str) -> dict[str, Any]:
+        """``POST /v1/chain-chat`` — plain-language Q&A about on-chain rights/royalties (0.02 USDC)."""
+        clean = asset_hash[2:] if asset_hash.startswith("0x") else asset_hash
+        return self.request("POST", "/v1/chain-chat", json={"question": question, "assetHash": clean})
+
+    # Guitar rig tools -----------------------------------------------------
+    def rig_analyze(self, *, audio_url: str) -> dict[str, Any]:
+        """``POST /v1/rig-analyze`` — infer guitar signal chain from audio (pedal order, drive, FX) (0.10 USDC)."""
+        return self.request("POST", "/v1/rig-analyze", json={"audioUrl": audio_url})
+
+    def rig_oracle(
+        self,
+        *,
+        goal: str,
+        genre: str | None = None,
+        budget_usd: float | None = None,
+    ) -> dict[str, Any]:
+        """``POST /v1/rig-oracle`` — recommend a full guitar rig for a target tone (0.10 USDC)."""
+        body: dict[str, Any] = {"goal": goal}
+        if genre:
+            body["genre"] = genre
+        if budget_usd is not None:
+            body["budgetUsd"] = budget_usd
+        return self.request("POST", "/v1/rig-oracle", json=body)
+
+    def rig_roast(
+        self,
+        *,
+        pedals: list[str],
+        amp: str | None = None,
+        guitar: str | None = None,
+    ) -> dict[str, Any]:
+        """``POST /v1/rig-roast`` — roast a gear list for laughs (0.05 USDC)."""
+        body: dict[str, Any] = {"pedals": pedals}
+        if amp:
+            body["amp"] = amp
+        if guitar:
+            body["guitar"] = guitar
+        return self.request("POST", "/v1/rig-roast", json=body)
 
 
 def _safe_json(response: httpx.Response) -> dict[str, Any]:

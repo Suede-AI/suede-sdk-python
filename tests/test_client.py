@@ -204,10 +204,15 @@ def test_request_raises_after_max_retries() -> None:
         "style_coach",
         "rights_lookup",
         "analyze",
+        "prompt_analyze",
+        "chain_chat",
+        "rig_analyze",
+        "rig_oracle",
+        "rig_roast",
     ],
 )
-def test_all_seventeen_endpoints_are_exposed(method_name: str) -> None:
-    """All 17 endpoints from the live manifest must be callable methods."""
+def test_all_twenty_two_endpoints_are_exposed(method_name: str) -> None:
+    """All 22 endpoints from the live manifest must be callable methods."""
     client = SuedeClient(wallet_private_key=TEST_PRIVATE_KEY)
     assert callable(getattr(client, method_name))
     client.close()
