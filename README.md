@@ -4,9 +4,11 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/suede-ai)](https://pypi.org/project/suede-ai/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/suede-ai)](https://pypi.org/project/suede-ai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![x402](https://img.shields.io/badge/x402-eip--3009-purple)](https://app.suedeai.xyz/.well-known/x402.json)
+[![x402](https://img.shields.io/badge/x402-eip--3009-purple)](https://app.suedeai.ai/.well-known/x402.json)
 
-**Python SDK for [Suede AI](https://suedeai.ai)** — x402 pay-per-call music generation, stem splitting, MIDI transcription, mastering, lyric sync, guitar rig tools, and IP-registry lookups. 22 endpoints settled in USDC on Base. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the endpoint.
+> **A [Suede Labs AI](https://suedeai.ai) project · Built by [Jason Colapietro](https://suedeai.ai/founder)**
+
+**Python SDK for [Suede Labs AI](https://suedeai.ai)** — x402 pay-per-call music generation, stem splitting, MIDI transcription, mastering, lyric sync, guitar rig tools, and IP-registry lookups. 22 endpoints settled in USDC on Base. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the endpoint.
 
 The SDK wraps the 402-challenge / sign / retry loop so your agent code spends its time writing creative prompts, not encoding typed data.
 
@@ -31,7 +33,7 @@ with SuedeClient(wallet_private_key=PRIVATE_KEY) as suede:
         prompt="lo-fi rainy afternoon, vinyl crackle, soft piano",
         duration_seconds=30,
     )
-    print(track["assetUrl"])      # https://cdn.suedeai.xyz/audio/trk_...mp3
+    print(track["assetUrl"])      # https://cdn.suedeai.ai/audio/trk_...mp3
     print(track["provenance"])    # {"fingerprint": "0x..."} — on-chain attestation
 ```
 
@@ -77,7 +79,7 @@ Prices are sourced from the live manifest at the time of writing and are enforce
 You can inspect the live manifest yourself:
 
 ```bash
-curl https://app.suedeai.xyz/.well-known/x402.json | jq
+curl https://app.suedeai.ai/.well-known/x402.json | jq
 ```
 
 ## Advanced
@@ -142,4 +144,4 @@ MIT. See [LICENSE](LICENSE).
 
 ---
 
-Built by [Jason Colapietro](https://github.com/JasonColapietro) · [Suede Labs AI](https://suedeai.ai) · [x402 manifest](https://app.suedeai.xyz/.well-known/x402.json)
+Built by [Jason Colapietro](https://github.com/JasonColapietro) · [Suede Labs AI](https://suedeai.ai) · [x402 manifest](https://app.suedeai.ai/.well-known/x402.json)
