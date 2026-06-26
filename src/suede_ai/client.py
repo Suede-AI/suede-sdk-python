@@ -4,7 +4,7 @@ The client wraps the 402-challenge / sign / retry loop so callers can spend
 their time writing creative prompts rather than signing EIP-3009 typed data.
 
 Each endpoint exposed by the live manifest at
-``https://app.suedeai.xyz/.well-known/x402.json`` has a typed method below.
+``https://app.suedeai.ai/.well-known/x402.json`` has a typed method below.
 Pricing is enforced server-side; client-side amounts shown in docstrings
 are sourced from the manifest at the time of writing and may change.
 """
@@ -22,7 +22,7 @@ from suede_ai.x402 import (
     sign_payment,
 )
 
-DEFAULT_BASE_URL = "https://app.suedeai.xyz"
+DEFAULT_BASE_URL = "https://app.suedeai.ai"
 DEFAULT_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
 MANIFEST_PATH = "/.well-known/x402.json"
 
@@ -33,7 +33,7 @@ class SuedeClient:
     Args:
         wallet_private_key: Hex-encoded private key (with or without ``0x`` prefix).
             Used to sign EIP-3009 authorizations for USDC on Base.
-        base_url: Override for the API host. Defaults to ``https://app.suedeai.xyz``.
+        base_url: Override for the API host. Defaults to ``https://app.suedeai.ai``.
         http_client: Optional pre-configured :class:`httpx.Client`. If provided,
             ``base_url`` and ``timeout`` are ignored on this argument.
         timeout: Per-request timeout. Defaults to 60s read / 10s connect.
@@ -44,7 +44,7 @@ class SuedeClient:
         >>> client = SuedeClient(wallet_private_key="0x...")
         >>> track = client.create_music(prompt="lo-fi rainy afternoon")
         >>> track["assetUrl"]
-        'https://cdn.suedeai.xyz/audio/trk_....mp3'
+        'https://cdn.suedeai.ai/audio/trk_....mp3'
     """
 
     def __init__(
