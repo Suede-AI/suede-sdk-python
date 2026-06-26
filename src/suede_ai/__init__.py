@@ -12,7 +12,7 @@ Quickstart::
     result = client.create_music(prompt="lo-fi rainy afternoon")
     print(result["assetUrl"])
 
-The live x402 manifest is at ``https://app.suedeai.xyz/.well-known/x402.json``.
+The live x402 manifest is at ``https://app.suedeai.ai/.well-known/x402.json``.
 """
 
 from suede_ai.client import SuedeClient
