@@ -188,8 +188,21 @@ def test_request_raises_after_max_retries() -> None:
     "method_name",
     [
         "create_music",
-        "agent_generate",
         "agent_video",
+        "agent_image",
+    ],
+)
+def test_current_paid_manifest_resources_are_exposed(method_name: str) -> None:
+    """All current paid resources from the live manifest have callable methods."""
+    client = SuedeClient(wallet_private_key=TEST_PRIVATE_KEY)
+    assert callable(getattr(client, method_name))
+    client.close()
+
+
+@pytest.mark.parametrize(
+    "method_name",
+    [
+        "agent_generate",
         "extend",
         "cover",
         "voice_cover",
@@ -211,8 +224,8 @@ def test_request_raises_after_max_retries() -> None:
         "rig_roast",
     ],
 )
-def test_all_twenty_two_endpoints_are_exposed(method_name: str) -> None:
-    """All 22 endpoints from the live manifest must be callable methods."""
+def test_legacy_convenience_methods_remain_available(method_name: str) -> None:
+    """Older helpers remain callable for clients using compatible deployments."""
     client = SuedeClient(wallet_private_key=TEST_PRIVATE_KEY)
     assert callable(getattr(client, method_name))
     client.close()

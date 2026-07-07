@@ -1,8 +1,9 @@
 """Suede AI Python SDK.
 
-Python SDK for the Suede AI x402 surface — 22 pay-per-call endpoints
-settled in USDC on Base. The client wraps the EIP-3009 sign-retry loop
-so callers can spend their time writing prompts, not signing typed data.
+Python SDK for the Suede AI x402 surface. The current public manifest exposes
+3 paid resources settled in USDC on Base, and the client wraps the EIP-3009
+sign-retry loop so callers can spend their time writing prompts, not signing
+typed data.
 
 Quickstart::
 

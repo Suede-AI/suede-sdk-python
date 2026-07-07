@@ -8,7 +8,7 @@
 
 > **A [Suede Labs AI](https://suedeai.ai) project · Built by [Jason Colapietro](https://suedeai.ai/founder)**
 
-**Python SDK for [Suede Labs AI](https://suedeai.ai)** — x402 pay-per-call music generation, stem splitting, MIDI transcription, mastering, lyric sync, guitar rig tools, and IP-registry lookups. 22 endpoints settled in USDC on Base. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the endpoint.
+**Python SDK for [Suede Labs AI](https://suedeai.ai)** — x402 pay-per-call music, video, and image generation. The current public manifest exposes 3 paid resources settled in USDC on Base. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the resource.
 
 The SDK wraps the 402-challenge / sign / retry loop so your agent code spends its time writing creative prompts, not encoding typed data.
 
@@ -39,34 +39,17 @@ with SuedeClient(wallet_private_key=PRIVATE_KEY) as suede:
 
 The first call returns 402 with the x402 challenge. The SDK signs an EIP-3009 `transferWithAuthorization` for USDC on Base, replays with `X-PAYMENT`, and returns the JSON body. You never touch the typed data.
 
-## The 22 endpoints
+## Current paid resources
 
 | Method                      | Endpoint                       | Price (USDC) | What it does                                          |
 | --------------------------- | ------------------------------ | ------------ | ----------------------------------------------------- |
 | `create_music`              | `POST /create-music`           | 0.20         | Rights-aware music generation                         |
-| `agent_generate`            | `POST /agent/generate`         | 0.20         | Agent-facing music output (same payload)              |
 | `agent_video`               | `POST /agent/video`            | 1.50         | Short music-video clip generation                     |
-| `extend`                    | `POST /v1/extend`              | 0.40         | Continue an existing Suede track                      |
-| `cover`                     | `POST /v1/cover`               | 0.40         | Stylistic re-imagining of a track                     |
-| `voice_cover`               | `POST /v1/vox`                 | 0.40         | Replace lead vocal with a Suede voice                 |
-| `continue_track`            | `POST /v1/continue`            | 0.40         | Extend an uploaded audio file                         |
-| `stems_pro`                 | `POST /v1/stems-pro`           | 0.40         | 4-stem split: vocals / drums / bass / other           |
-| `stems_basic`               | `POST /v1/stems`               | 0.20         | 2-stem split: vocals + instrumental                   |
-| `vox`                       | `POST /v1/acapella`            | 0.20         | Isolate the vocal stem                                |
-| `midi`                      | `POST /v1/midi`                | 0.10         | Transcribe audio to MIDI                              |
-| `wav_master`                | `POST /v1/mastering`           | 0.10         | High-quality WAV master                               |
-| `lyric_sync`                | `POST /v1/lyric-sync`          | 0.10         | Timestamped lyrics for a track                        |
-| `lyrics`                    | `POST /v1/lyrics`              | 0.04         | Generate fresh song lyrics from a prompt              |
-| `style_coach`               | `POST /v1/style-coach`         | 0.02         | Expand short tags into a prompt-ready style brief     |
-| `rights_lookup`             | `GET  /v1/rights/{assetHash}`  | 0.005        | Suede Registry attestation lookup (owner / IP / NFT)  |
-| `analyze`                   | `POST /v1/analyze`             | 0.003        | BPM / key / mode / energy / danceability              |
-| `prompt_analyze`            | `POST /v1/prompt-analyze`      | 0.003        | Extract genre, mood, instrumentation from a prompt    |
-| `chain_chat`                | `POST /v1/chain-chat`          | 0.02         | Plain-language Q&A about on-chain rights / royalties  |
-| `rig_analyze`               | `POST /v1/rig/analyze`         | 0.10         | Infer guitar signal chain from audio                  |
-| `rig_oracle`                | `POST /v1/rig/oracle`          | 0.10         | Recommend a full guitar rig for a target tone         |
-| `rig_roast`                 | `POST /v1/rig/roast`           | 0.05         | Roast a gear list for laughs                          |
+| `agent_image`               | `POST /agent/image`            | 0.05         | Rights-aware image generation                         |
 
 Prices are sourced from the live manifest at the time of writing and are enforced server-side.
+
+Older convenience helpers from the 0.3.0 SDK surface remain callable for compatibility with deployments that still expose them, but they are not advertised by the current public paid manifest. Call `suede.manifest()` when you need the live resource list.
 
 ## How payment works
 
@@ -94,10 +77,10 @@ http = httpx.Client(http2=True, timeout=120.0)
 suede = SuedeClient(wallet_private_key=PRIVATE_KEY, http_client=http)
 ```
 
-### Direct call to any endpoint
+### Direct call to any current resource
 
 ```python
-result = suede.request("POST", "/v1/style-coach", json={"tags": "lofi, rainy"})
+result = suede.request("POST", "/agent/image", json={"prompt": "lo-fi rainy afternoon album art"})
 ```
 
 ### Inspect the live manifest
@@ -106,7 +89,9 @@ result = suede.request("POST", "/v1/style-coach", json={"tags": "lofi, rainy"})
 manifest = suede.manifest()  # free — no payment required
 ```
 
-### Guitar rig tools
+### Compatibility helpers
+
+The client still includes older helpers such as guitar rig analysis, stems, MIDI, lyrics, and rights lookup for compatible deployments. These are not listed in the current public paid manifest.
 
 ```python
 # What signal chain is this guitar recording running?

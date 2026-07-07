@@ -3,8 +3,9 @@
 The client wraps the 402-challenge / sign / retry loop so callers can spend
 their time writing creative prompts rather than signing EIP-3009 typed data.
 
-Each endpoint exposed by the live manifest at
-``https://app.suedeai.ai/.well-known/x402.json`` has a typed method below.
+The current paid resources exposed by the live manifest at
+``https://app.suedeai.ai/.well-known/x402.json`` have typed methods below.
+Older convenience helpers remain for callers using compatible deployments.
 Pricing is enforced server-side; client-side amounts shown in docstrings
 are sourced from the manifest at the time of writing and may change.
 """
@@ -177,6 +178,25 @@ class SuedeClient:
         if resolution:
             body["resolution"] = resolution
         return self.request("POST", "/agent/video", json=body)
+
+    def agent_image(
+        self,
+        *,
+        prompt: str,
+        aspect_ratio: str | None = None,
+        output_format: str | None = None,
+    ) -> dict[str, Any]:
+        """``POST /agent/image`` — rights-aware image generation (0.05 USDC).
+
+        ``aspect_ratio`` examples include ``"1:1"``, ``"9:16"``, and ``"16:9"``;
+        ``output_format`` one of ``"png" | "jpeg"``.
+        """
+        body: dict[str, Any] = {"prompt": prompt}
+        if aspect_ratio:
+            body["aspectRatio"] = aspect_ratio
+        if output_format:
+            body["outputFormat"] = output_format
+        return self.request("POST", "/agent/image", json=body)
 
     # Music tools ----------------------------------------------------------
     def extend(
