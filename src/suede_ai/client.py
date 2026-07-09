@@ -154,10 +154,10 @@ class SuedeClient:
         duration_seconds: int = 30,
         style: str | None = None,
     ) -> dict[str, Any]:
-        """``POST /agent/generate`` — agent-facing music output (0.20 USDC).
+        """``POST /agent/generate`` — legacy alias for ``create_music`` (0.20 USDC).
 
-        Same payload shape as ``create_music``. Use this from agent frameworks
-        that key on the ``/agent/*`` namespace.
+        Same pipeline and payload shape as ``create_music``; not in the public
+        discovery manifest. Prefer ``create_music`` for new integrations.
         """
         body: dict[str, Any] = {"prompt": prompt, "durationSeconds": duration_seconds}
         if style:
