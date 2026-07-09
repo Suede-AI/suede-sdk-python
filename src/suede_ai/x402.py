@@ -76,24 +76,23 @@ def select_requirement(
     preferred_asset: str = USDC_BASE_ADDRESS,
     preferred_network: str = BASE_NETWORK_ID,
 ) -> PaymentRequirement:
-    """Pick a usable accept entry, preferring USDC on Base + exact scheme."""
+    """Pick a usable accept entry, requiring USDC on Base + exact scheme."""
     if not accepts:
         raise PaymentRequired("Server returned 402 with no acceptable schemes.")
 
-    def score(entry: dict[str, Any]) -> tuple[int, int, int]:
-        return (
-            1 if entry.get("asset", "").lower() == preferred_asset.lower() else 0,
-            1 if entry.get("network") == preferred_network else 0,
-            1 if entry.get("scheme") == "exact" else 0,
-        )
-
-    ranked = sorted(accepts, key=score, reverse=True)
-    chosen = ranked[0]
-    if chosen.get("scheme") != "exact":
+    matching = [
+        entry
+        for entry in accepts
+        if entry.get("scheme") == "exact"
+        and entry.get("asset", "").lower() == preferred_asset.lower()
+        and entry.get("network") == preferred_network
+    ]
+    if not matching:
         raise PaymentRequired(
-            f"No 'exact' scheme offered. Server returned: {chosen.get('scheme')!r}"
+            "No 'exact' scheme offering USDC on Base was found in the server's "
+            "accepts array."
         )
-    return PaymentRequirement.from_dict(chosen)
+    return PaymentRequirement.from_dict(matching[0])
 
 
 def build_authorization(
