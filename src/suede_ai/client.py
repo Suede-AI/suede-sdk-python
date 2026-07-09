@@ -67,7 +67,7 @@ class SuedeClient:
         self._http = http_client or httpx.Client(
             base_url=self._base_url,
             timeout=timeout or DEFAULT_TIMEOUT,
-            headers={"User-Agent": "suede-ai-python/0.3.0"},
+            headers={"User-Agent": "suede-ai-python/0.3.1"},
         )
         self._max_payment_attempts = max_payment_attempts
 

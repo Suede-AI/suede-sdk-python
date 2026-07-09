@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "suede-ai"
-version = "0.3.0"
-description = "Python SDK for Suede AI — x402 pay-per-call music, video, and image generation settled in USDC on Base. No API keys."
+version = "0.3.1"
+description = "Python SDK for Suede AI — x402 pay-per-call music, video, image, stem splitting, MIDI, mastering, rights lookup, and 12 more tools, settled in USDC on Base. No API keys."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
