@@ -12,6 +12,7 @@ are sourced from the manifest at the time of writing and may change.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import httpx
@@ -26,6 +27,7 @@ from suede_ai.x402 import (
 DEFAULT_BASE_URL = "https://app.suedeai.ai"
 DEFAULT_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
 MANIFEST_PATH = "/.well-known/x402.json"
+_HEX_HASH_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
 class SuedeClient:
@@ -103,8 +105,12 @@ class SuedeClient:
         """
         attempt = 0
         last_response: httpx.Response | None = None
+        payment_header: str | None = None
         while attempt <= self._max_payment_attempts:
-            response = self._http.request(method, path, json=json, params=params)
+            req_headers = {"X-PAYMENT": payment_header} if payment_header else None
+            response = self._http.request(
+                method, path, json=json, params=params, headers=req_headers
+            )
             last_response = response
             if response.status_code != 402:
                 response.raise_for_status()
@@ -113,8 +119,7 @@ class SuedeClient:
             body = _safe_json(response)
             accepts = body.get("accepts") or []
             requirement = select_requirement(accepts)
-            header, _payload = sign_payment(self._private_key, requirement)
-            self._http.headers["X-PAYMENT"] = header
+            payment_header, _payload = sign_payment(self._private_key, requirement)
             attempt += 1
 
         # We replayed but still got 402.
@@ -342,6 +347,8 @@ class SuedeClient:
         without ``0x`` prefix).
         """
         clean = asset_hash[2:] if asset_hash.startswith("0x") else asset_hash
+        if not _HEX_HASH_RE.fullmatch(clean):
+            raise ValueError("asset_hash must be a 64-character hex string")
         return self.request("GET", f"/v1/rights/{clean}")
 
     def analyze(self, *, audio_url: str) -> dict[str, Any]:
