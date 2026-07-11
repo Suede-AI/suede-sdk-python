@@ -2,8 +2,9 @@
 
 Python SDK for the Suede AI x402 surface: 20 confirmed-live paid endpoints
 settled in USDC on Base (music, video, image, stem splitting, MIDI,
-mastering, rights lookup, and more). Only 3 (plus credit purchase) are in
-the public discovery manifest; every client method below works regardless.
+mastering, rights lookup, and more). Only 3 are in the public discovery
+manifest, deliberately scoped to media-generation offerings; every client
+method below works regardless.
 The client wraps the EIP-3009 sign-retry loop so callers can spend their
 time writing prompts, not signing typed data.
 

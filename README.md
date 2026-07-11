@@ -8,7 +8,7 @@
 
 > **A [Suede Labs AI](https://suedeai.ai) project · Built by [Jason Colapietro](https://suedeai.ai/founder)**
 
-**Python SDK for [Suede Labs AI](https://suedeai.ai)** — x402 pay-per-call music, video, image, and 17 more musician and utility tools, all settled in USDC on Base. 20 client methods hit a live `402 Payment Required` challenge today; only 3 (plus credit purchase) are in the public discovery manifest, but every method below works. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the resource.
+**Python SDK for [Suede Labs AI](https://suedeai.ai)** — x402 pay-per-call music, video, image, and 17 more musician and utility tools, all settled in USDC on Base. 20 client methods hit a live `402 Payment Required` challenge today; only 3 are in the public discovery manifest (deliberately scoped to media-generation offerings), but every method below works regardless. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the resource.
 
 The SDK wraps the 402-challenge / sign / retry loop so your agent code spends its time writing creative prompts, not encoding typed data.
 
@@ -41,7 +41,7 @@ The first call returns 402 with the x402 challenge. The SDK signs an EIP-3009 `t
 
 ## Current paid resources
 
-In the public discovery manifest (`/.well-known/x402.json`) plus credit purchase:
+In the public discovery manifest (`/.well-known/x402.json`) — deliberately scoped to media-generation offerings only:
 
 | Method                      | Endpoint                       | Price (USDC) | What it does                                          |
 | --------------------------- | ------------------------------ | ------------ | ----------------------------------------------------- |
