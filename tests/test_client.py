@@ -31,21 +31,105 @@ TEST_PRIVATE_KEY = "0x" + "11" * 32
 
 def _accept_entry(
     *,
-    amount: str = "200000",
+    amount: str = "500000",
     asset: str = USDC_BASE_ADDRESS,
     pay_to: str = "0xb5a05466712fd5bcdf2883f43cC6B1799428032d",
+    network: str = BASE_NETWORK_ID,
+    price_usd: str = "$0.50",
+    resource_url: str = "https://app.suedeai.ai/create-music",
+    output_schema: dict | None = None,
 ) -> dict:
-    return {
+    entry = {
         "scheme": "exact",
-        "network": BASE_NETWORK_ID,
+        "network": network,
         "maxAmountRequired": amount,
         "amount": amount,
         "asset": asset,
         "payTo": pay_to,
         "maxTimeoutSeconds": 300,
-        "extra": {"name": "USD Coin", "version": "2"},
-        "resource": "https://app.suedeai.ai/create-music",
+        "docs": "https://app.suedeai.ai/developers",
+        "extra": {
+            "name": "USD Coin",
+            "version": "2",
+            "decimals": 6,
+            "priceUsd": price_usd,
+        },
+        "resource": resource_url,
+        "description": "Paid media generation for agents.",
         "mimeType": "application/json",
+    }
+    if output_schema is not None:
+        entry["outputSchema"] = output_schema
+    return entry
+
+
+VIDEO_RESOURCE = {
+    "url": "https://app.suedeai.ai/agent/video",
+    "description": "Text-to-video generation for agents.",
+    "mimeType": "application/json",
+    "serviceName": "Suede AI",
+    "tags": ["video", "video-generation", "text-to-video"],
+}
+VIDEO_EXTENSIONS = {
+    "skyfire": {
+        "header": "PAYMENT-SIGNATURE",
+        "tokenTypes": ["pay+jwt", "kya-pay+jwt"],
+    },
+    "bazaar": {
+        "info": {
+            "input": {
+                "type": "http",
+                "method": "POST",
+                "bodyType": "json",
+                "body": {"prompt": "<prompt>", "durationSeconds": 8},
+            },
+            "output": {
+                "type": "json",
+                "example": {
+                    "jobId": "video-job-example",
+                    "status": "queued",
+                    "provider": "suede",
+                    "pollUrl": "https://app.suedeai.ai/agent/video/video-job-example",
+                },
+            },
+        }
+    },
+}
+
+
+def _live_shaped_video_challenge() -> dict:
+    """Mirror the live dual-network x402-v2 challenge without making a paid call."""
+    output_schema = {
+        "input": {
+            "type": "http",
+            "method": "POST",
+            "discoverable": True,
+            "bodyType": "json",
+            "body": {"prompt": "<prompt>", "durationSeconds": 8, "aspectRatio": "16:9"},
+        },
+        "output": {
+            "jobId": "video-job-example",
+            "status": "queued",
+            "provider": "suede",
+            "pollUrl": "https://app.suedeai.ai/agent/video/video-job-example",
+        },
+    }
+    common = {
+        "amount": "4990000",
+        "pay_to": "0x10FF767043A1723E0BB5B9207bC37D3442cC9E4F",
+        "price_usd": "$4.99",
+        "resource_url": VIDEO_RESOURCE["url"],
+        "output_schema": output_schema,
+    }
+    return {
+        "x402Version": 2,
+        "error": "PAYMENT-SIGNATURE header is required",
+        "resource": VIDEO_RESOURCE,
+        "accepts": [
+            _accept_entry(network="base", **common),
+            _accept_entry(network=BASE_NETWORK_ID, **common),
+        ],
+        "extensions": VIDEO_EXTENSIONS,
     }
 
 
@@ -107,18 +191,40 @@ def test_select_requirement_raises_when_no_accepts() -> None:
 
 
 # --------------------------------------------------------------------------- signing
-def test_sign_payment_produces_valid_x_payment_header() -> None:
-    requirement = PaymentRequirement.from_dict(_accept_entry())
-    header, payload = sign_payment(TEST_PRIVATE_KEY, requirement)
+def test_sign_payment_produces_full_v2_payment_payload() -> None:
+    challenge = _live_shaped_video_challenge()
+    requirement = select_requirement(challenge["accepts"])
+    header, payload = sign_payment(
+        TEST_PRIVATE_KEY,
+        requirement,
+        resource=challenge["resource"],
+        extensions=challenge["extensions"],
+    )
 
     # Header must be base64-decodable and round-trip back to the payload.
     decoded = json.loads(base64.b64decode(header))
     assert decoded == payload
 
-    # x402 envelope shape.
-    assert payload["x402Version"] == 1
-    assert payload["scheme"] == "exact"
-    assert payload["network"] == BASE_NETWORK_ID
+    # Full x402-v2 envelope. The accepted requirement is the CAIP-2 option,
+    # uses `amount`, and does not leak the v1 `maxAmountRequired` alias.
+    assert set(payload) == {"x402Version", "resource", "accepted", "extensions", "payload"}
+    assert payload["x402Version"] == 2
+    assert payload["resource"] == VIDEO_RESOURCE
+    assert payload["extensions"] == VIDEO_EXTENSIONS
+    assert payload["accepted"] == {
+        "scheme": "exact",
+        "network": BASE_NETWORK_ID,
+        "amount": "4990000",
+        "asset": USDC_BASE_ADDRESS,
+        "payTo": "0x10FF767043A1723E0BB5B9207bC37D3442cC9E4F",
+        "maxTimeoutSeconds": 300,
+        "extra": {
+            "name": "USD Coin",
+            "version": "2",
+            "decimals": 6,
+            "priceUsd": "$4.99",
+        },
+    }
 
     inner = payload["payload"]
     assert inner["signature"].startswith("0x")
@@ -133,28 +239,39 @@ def test_sign_payment_produces_valid_x_payment_header() -> None:
 
 
 # --------------------------------------------------------------------------- 402 retry loop
-def test_request_replays_with_payment_header_on_402() -> None:
+def test_request_prefers_payment_required_header_and_returns_queued_media() -> None:
     call_count = {"n": 0}
+    challenge = _live_shaped_video_challenge()
+    challenge_header = base64.b64encode(
+        json.dumps(challenge, separators=(",", ":")).encode()
+    ).decode()
 
     def handler(request: httpx.Request) -> httpx.Response:
         call_count["n"] += 1
         if call_count["n"] == 1:
-            assert "X-PAYMENT" not in request.headers
+            assert "PAYMENT-SIGNATURE" not in request.headers
             return httpx.Response(
                 402,
-                json={"accepts": [_accept_entry()]},
+                headers={"PAYMENT-REQUIRED": challenge_header},
+                # Deliberately unusable body: header parsing must win.
+                json={"x402Version": 2, "accepts": [_accept_entry(network="base")]},
             )
-        # second call must carry X-PAYMENT
-        assert "X-PAYMENT" in request.headers
-        header = request.headers["X-PAYMENT"]
+        assert "PAYMENT-SIGNATURE" in request.headers
+        assert "X-PAYMENT" not in request.headers
+        header = request.headers["PAYMENT-SIGNATURE"]
         decoded = json.loads(base64.b64decode(header))
-        assert decoded["scheme"] == "exact"
-        assert decoded["network"] == BASE_NETWORK_ID
+        assert decoded["x402Version"] == 2
+        assert decoded["accepted"]["network"] == BASE_NETWORK_ID
+        assert decoded["accepted"]["amount"] == "4990000"
+        assert decoded["resource"] == VIDEO_RESOURCE
+        assert decoded["extensions"] == VIDEO_EXTENSIONS
         return httpx.Response(
-            200,
+            202,
             json={
-                "trackId": "trk_test_001",
-                "assetUrl": "https://cdn.example/trk_test_001.mp3",
+                "jobId": "video-job-001",
+                "status": "queued",
+                "provider": "suede",
+                "pollUrl": "https://app.suedeai.ai/agent/video/video-job-001",
             },
         )
 
@@ -162,8 +279,35 @@ def test_request_replays_with_payment_header_on_402() -> None:
     http = httpx.Client(transport=transport, base_url="https://app.suedeai.ai")
     client = SuedeClient(wallet_private_key=TEST_PRIVATE_KEY, http_client=http)
 
-    result = client.create_music(prompt="test prompt")
-    assert result["trackId"] == "trk_test_001"
+    result = client.agent_video(prompt="A rain-soaked neon street")
+    assert result == {
+        "jobId": "video-job-001",
+        "status": "queued",
+        "provider": "suede",
+        "pollUrl": "https://app.suedeai.ai/agent/video/video-job-001",
+    }
+    assert call_count["n"] == 2
+
+
+def test_request_falls_back_to_json_challenge_when_header_is_missing() -> None:
+    call_count = {"n": 0}
+    challenge = _live_shaped_video_challenge()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return httpx.Response(402, json=challenge)
+        decoded = json.loads(base64.b64decode(request.headers["PAYMENT-SIGNATURE"]))
+        assert decoded["accepted"]["network"] == BASE_NETWORK_ID
+        return httpx.Response(200, json={"trackId": "trk_body_fallback"})
+
+    transport = httpx.MockTransport(handler)
+    http = httpx.Client(transport=transport, base_url="https://app.suedeai.ai")
+    client = SuedeClient(wallet_private_key=TEST_PRIVATE_KEY, http_client=http)
+
+    result = client.create_music(prompt="body fallback")
+
+    assert result == {"trackId": "trk_body_fallback"}
     assert call_count["n"] == 2
 
 
@@ -181,6 +325,32 @@ def test_request_raises_after_max_retries() -> None:
 
     with pytest.raises(X402Error):
         client.create_music(prompt="will keep failing")
+
+
+def test_agent_generate_compatibility_wrapper_uses_create_music_route() -> None:
+    """The legacy method name must never send callers to the retired route."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        assert request.url.path == "/create-music"
+        assert json.loads(request.content) == {
+            "prompt": "compatibility call",
+            "durationSeconds": 45,
+            "style": "ambient",
+        }
+        return httpx.Response(200, json={"trackId": "trk_compat"})
+
+    transport = httpx.MockTransport(handler)
+    http = httpx.Client(transport=transport, base_url="https://app.suedeai.ai")
+    client = SuedeClient(wallet_private_key=TEST_PRIVATE_KEY, http_client=http)
+
+    result = client.agent_generate(
+        prompt="compatibility call",
+        duration_seconds=45,
+        style="ambient",
+    )
+
+    assert result == {"trackId": "trk_compat"}
 
 
 # --------------------------------------------------------------------------- coverage of method surface

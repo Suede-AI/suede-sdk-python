@@ -12,13 +12,15 @@ are sourced from the manifest at the time of writing and may change.
 
 from __future__ import annotations
 
+import base64
+import binascii
+import json as jsonlib
 import re
 from typing import Any
 
 import httpx
 
 from suede_ai.x402 import (
-    PaymentRequired,
     X402Error,
     select_requirement,
     sign_payment,
@@ -76,7 +78,7 @@ class SuedeClient:
         if self._owns_client:
             self._http.close()
 
-    def __enter__(self) -> "SuedeClient":
+    def __enter__(self) -> SuedeClient:  # noqa: PYI034 - Python 3.10 support
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
@@ -97,7 +99,7 @@ class SuedeClient:
         json: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Make a paid request: on 402, sign EIP-3009 and replay with X-PAYMENT.
+        """Make a paid request: on 402, sign EIP-3009 and replay with PAYMENT-SIGNATURE.
 
         Raises:
             PaymentRequired: server returned 402 but no acceptable scheme.
@@ -107,7 +109,7 @@ class SuedeClient:
         last_response: httpx.Response | None = None
         payment_header: str | None = None
         while attempt <= self._max_payment_attempts:
-            req_headers = {"X-PAYMENT": payment_header} if payment_header else None
+            req_headers = {"PAYMENT-SIGNATURE": payment_header} if payment_header else None
             response = self._http.request(
                 method, path, json=json, params=params, headers=req_headers
             )
@@ -116,10 +118,17 @@ class SuedeClient:
                 response.raise_for_status()
                 return _safe_json(response)
 
-            body = _safe_json(response)
-            accepts = body.get("accepts") or []
+            challenge = _payment_challenge(response)
+            accepts = challenge.get("accepts") or []
             requirement = select_requirement(accepts)
-            payment_header, _payload = sign_payment(self._private_key, requirement)
+            resource = challenge.get("resource")
+            extensions = challenge.get("extensions")
+            payment_header, _payload = sign_payment(
+                self._private_key,
+                requirement,
+                resource=resource if isinstance(resource, dict) else None,
+                extensions=extensions if isinstance(extensions, dict) else None,
+            )
             attempt += 1
 
         # We replayed but still got 402.
@@ -138,7 +147,7 @@ class SuedeClient:
         duration_seconds: int = 30,
         style: str | None = None,
     ) -> dict[str, Any]:
-        """``POST /create-music`` — rights-aware music generation (0.20 USDC).
+        """``POST /create-music`` — rights-aware music generation (0.50 USDC).
 
         Returns ``{trackId, shareUrl, assetUrl, provenance: {fingerprint}}``.
         """
@@ -154,15 +163,16 @@ class SuedeClient:
         duration_seconds: int = 30,
         style: str | None = None,
     ) -> dict[str, Any]:
-        """``POST /agent/generate`` — legacy alias for ``create_music`` (0.20 USDC).
+        """Deprecated compatibility wrapper for ``create_music`` (0.50 USDC).
 
-        Same pipeline and payload shape as ``create_music``; not in the public
-        discovery manifest. Prefer ``create_music`` for new integrations.
+        The retired ``/agent/generate`` route is not called. New and existing
+        integrations are sent to the current public ``/create-music`` resource.
         """
-        body: dict[str, Any] = {"prompt": prompt, "durationSeconds": duration_seconds}
-        if style:
-            body["style"] = style
-        return self.request("POST", "/agent/generate", json=body)
+        return self.create_music(
+            prompt=prompt,
+            duration_seconds=duration_seconds,
+            style=style,
+        )
 
     def agent_video(
         self,
@@ -172,7 +182,7 @@ class SuedeClient:
         aspect_ratio: str | None = None,
         resolution: str | None = None,
     ) -> dict[str, Any]:
-        """``POST /agent/video`` — short music-video clip generation (1.50 USDC).
+        """``POST /agent/video`` — 8-second 720p video with native audio (4.99 USDC).
 
         ``aspect_ratio`` one of ``"16:9" | "9:16" | "1:1"``;
         ``resolution`` one of ``"720p" | "1024p"``.
@@ -191,7 +201,7 @@ class SuedeClient:
         aspect_ratio: str | None = None,
         output_format: str | None = None,
     ) -> dict[str, Any]:
-        """``POST /agent/image`` — rights-aware image generation (0.05 USDC).
+        """``POST /agent/image`` — rights-aware image generation (0.15 USDC).
 
         ``aspect_ratio`` examples include ``"1:1"``, ``"9:16"``, and ``"16:9"``;
         ``output_format`` one of ``"png" | "jpeg"``.
@@ -214,7 +224,7 @@ class SuedeClient:
         tags: str | None = None,
         continue_at_seconds: float | None = None,
     ) -> dict[str, Any]:
-        """``POST /v1/extend`` — continue an existing Suede track (0.40 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/extend``; read the live quote."""
         if not (source_clip_id or audio_url):
             raise ValueError("Provide source_clip_id or audio_url")
         body: dict[str, Any] = {}
@@ -242,7 +252,7 @@ class SuedeClient:
         tags: str | None = None,
         style: str | None = None,
     ) -> dict[str, Any]:
-        """``POST /v1/cover`` — stylistic re-imagining of a track (0.40 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/cover``; read the live quote."""
         if not (source_clip_id or audio_url):
             raise ValueError("Provide source_clip_id or audio_url")
         body: dict[str, Any] = {}
@@ -267,7 +277,7 @@ class SuedeClient:
         voice_id: str | None = None,
         pitch_shift: float | None = None,
     ) -> dict[str, Any]:
-        """``POST /v1/vox`` — replace lead vocal with a Suede voice (0.40 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/vox``; read the live quote."""
         body: dict[str, Any] = {"audioUrl": audio_url}
         if voice_id:
             body["voiceId"] = voice_id
@@ -283,7 +293,7 @@ class SuedeClient:
         continue_at_seconds: float | None = None,
         duration_seconds: int | None = None,
     ) -> dict[str, Any]:
-        """``POST /v1/continue`` — extend an uploaded audio file (0.40 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/continue``; read the live quote."""
         body: dict[str, Any] = {"audioUrl": audio_url}
         if prompt:
             body["prompt"] = prompt
@@ -294,23 +304,23 @@ class SuedeClient:
         return self.request("POST", "/v1/continue", json=body)
 
     def stems_pro(self, *, audio_url: str) -> dict[str, Any]:
-        """``POST /v1/stems-pro`` — 4-stem split: vocals/drums/bass/other (0.40 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/stems-pro``; read the live quote."""
         return self.request("POST", "/v1/stems-pro", json={"audioUrl": audio_url})
 
     def stems_basic(self, *, audio_url: str) -> dict[str, Any]:
-        """``POST /v1/stems`` — 2-stem split: vocals + instrumental (0.20 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/stems``; read the live quote."""
         return self.request("POST", "/v1/stems", json={"audioUrl": audio_url})
 
     def vox(self, *, audio_url: str) -> dict[str, Any]:
-        """``POST /v1/acapella`` — isolate the vocal stem (0.20 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/acapella``; read the live quote."""
         return self.request("POST", "/v1/acapella", json={"audioUrl": audio_url})
 
     def midi(self, *, audio_url: str) -> dict[str, Any]:
-        """``POST /v1/midi`` — transcribe audio to MIDI (0.10 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/midi``; read the live quote."""
         return self.request("POST", "/v1/midi", json={"audioUrl": audio_url})
 
     def wav_master(self, *, audio_url: str) -> dict[str, Any]:
-        """``POST /v1/mastering`` — render a high-quality WAV master (0.10 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/mastering``; read the live quote."""
         return self.request("POST", "/v1/mastering", json={"audioUrl": audio_url})
 
     def lyric_sync(
@@ -319,21 +329,21 @@ class SuedeClient:
         audio_url: str,
         lyrics: str | None = None,
     ) -> dict[str, Any]:
-        """``POST /v1/lyric-sync`` — generate timestamped lyrics (0.10 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/lyric-sync``; read the live quote."""
         body: dict[str, Any] = {"audioUrl": audio_url}
         if lyrics:
             body["lyrics"] = lyrics
         return self.request("POST", "/v1/lyric-sync", json=body)
 
     def lyrics(self, *, prompt: str, style: str | None = None) -> dict[str, Any]:
-        """``POST /v1/lyrics`` — generate fresh song lyrics from a prompt (0.04 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/lyrics``; read the live quote."""
         body: dict[str, Any] = {"prompt": prompt}
         if style:
             body["style"] = style
         return self.request("POST", "/v1/lyrics", json=body)
 
     def style_coach(self, *, tags: str, target_count: int | None = None) -> dict[str, Any]:
-        """``POST /v1/style-coach`` — expand short style tags into a prompt brief (0.02 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/style-coach``; read the live quote."""
         body: dict[str, Any] = {"tags": tags}
         if target_count is not None:
             body["targetCount"] = target_count
@@ -341,32 +351,34 @@ class SuedeClient:
 
     # Rights / analysis ----------------------------------------------------
     def rights_lookup(self, asset_hash: str) -> dict[str, Any]:
-        """``GET /v1/rights/{assetHash}`` — Suede Registry attestation lookup (0.005 USDC).
+        """``GET /v1/rights/{assetHash}`` — Registry lookup (0.015 USDC live quote).
 
         ``asset_hash`` is a 32-byte content hash (sha256, hex-encoded, with or
         without ``0x`` prefix).
         """
-        clean = asset_hash[2:] if asset_hash.startswith("0x") else asset_hash
+        clean = asset_hash.removeprefix("0x")
         if not _HEX_HASH_RE.fullmatch(clean):
             raise ValueError("asset_hash must be a 64-character hex string")
         return self.request("GET", f"/v1/rights/{clean}")
 
     def analyze(self, *, audio_url: str) -> dict[str, Any]:
-        """``POST /v1/analyze`` — BPM/key/mode/energy analysis (0.003 USDC)."""
+        """``POST /v1/analyze`` — BPM/key/mode/energy analysis (0.01 USDC live quote)."""
         return self.request("POST", "/v1/analyze", json={"audioUrl": audio_url})
 
     def prompt_analyze(self, *, prompt: str) -> dict[str, Any]:
-        """``POST /v1/prompt-analyze`` — extract genre, mood, instrumentation from a prompt (0.003 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/prompt-analyze``; read the live quote."""
         return self.request("POST", "/v1/prompt-analyze", json={"prompt": prompt})
 
     def chain_chat(self, *, question: str, asset_hash: str) -> dict[str, Any]:
-        """``POST /v1/chain-chat`` — plain-language Q&A about on-chain rights/royalties (0.02 USDC)."""
-        clean = asset_hash[2:] if asset_hash.startswith("0x") else asset_hash
-        return self.request("POST", "/v1/chain-chat", json={"question": question, "assetHash": clean})
+        """Legacy compatibility helper for ``POST /v1/chain-chat``; read the live quote."""
+        clean = asset_hash.removeprefix("0x")
+        return self.request(
+            "POST", "/v1/chain-chat", json={"question": question, "assetHash": clean}
+        )
 
     # Guitar rig tools -----------------------------------------------------
     def rig_analyze(self, *, audio_url: str) -> dict[str, Any]:
-        """``POST /v1/rig/analyze`` — infer guitar signal chain from audio (0.10 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/rig/analyze``; read the live quote."""
         return self.request("POST", "/v1/rig/analyze", json={"audioUrl": audio_url})
 
     def rig_oracle(
@@ -376,7 +388,7 @@ class SuedeClient:
         genre: str | None = None,
         budget_usd: float | None = None,
     ) -> dict[str, Any]:
-        """``POST /v1/rig/oracle`` — recommend a full guitar rig for a target tone (0.10 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/rig/oracle``; read the live quote."""
         body: dict[str, Any] = {"goal": goal}
         if genre:
             body["genre"] = genre
@@ -390,7 +402,7 @@ class SuedeClient:
         goal: str,
         gear: list[str] | None = None,
     ) -> dict[str, Any]:
-        """``POST /v1/rig/roast`` — roast a gear list for laughs (0.05 USDC)."""
+        """Legacy compatibility helper for ``POST /v1/rig/roast``; read the live quote."""
         body: dict[str, Any] = {"goal": goal}
         if gear:
             body["gear"] = gear
@@ -402,3 +414,17 @@ def _safe_json(response: httpx.Response) -> dict[str, Any]:
         return response.json()
     except ValueError:
         return {"raw": response.text}
+
+
+def _payment_challenge(response: httpx.Response) -> dict[str, Any]:
+    """Read the v2 challenge header first, with the JSON response as fallback."""
+    encoded = response.headers.get("PAYMENT-REQUIRED")
+    if encoded:
+        try:
+            decoded = base64.b64decode(encoded, validate=True).decode("utf-8")
+            challenge = jsonlib.loads(decoded)
+            if isinstance(challenge, dict):
+                return challenge
+        except (binascii.Error, UnicodeDecodeError, ValueError):
+            pass
+    return _safe_json(response)

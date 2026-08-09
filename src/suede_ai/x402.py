@@ -3,8 +3,8 @@
 Implements the EIP-3009 ``transferWithAuthorization`` typed-data signing
 used by the Suede AI x402 endpoints. On a 402 challenge from the server,
 we read the ``accepts`` array, sign an authorization for the canonical
-USDC contract on Base, and replay the request with an ``X-PAYMENT``
-header containing the base64-encoded payload.
+USDC contract on Base, and replay the request with a ``PAYMENT-SIGNATURE``
+header containing the base64-encoded x402-v2 payload.
 
 References:
     - x402 spec: https://x402.gitbook.io/x402/
@@ -56,18 +56,32 @@ class PaymentRequirement:
     raw: dict[str, Any]
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "PaymentRequirement":
+    def from_dict(cls, data: dict[str, Any]) -> PaymentRequirement:
         return cls(
             scheme=data["scheme"],
             network=data["network"],
             asset=data["asset"],
             pay_to=data["payTo"],
-            max_amount_required=str(data.get("maxAmountRequired") or data["amount"]),
+            max_amount_required=str(data.get("amount") or data["maxAmountRequired"]),
             max_timeout_seconds=int(data.get("maxTimeoutSeconds", 300)),
             resource=data.get("resource", ""),
             extra=data.get("extra", {}),
             raw=data,
         )
+
+    def as_v2_accepted(self) -> dict[str, Any]:
+        """Return the strict x402-v2 ``accepted`` requirement shape."""
+        accepted: dict[str, Any] = {
+            "scheme": self.scheme,
+            "network": self.network,
+            "amount": self.max_amount_required,
+            "asset": self.asset,
+            "payTo": self.pay_to,
+            "maxTimeoutSeconds": self.max_timeout_seconds,
+        }
+        if self.extra:
+            accepted["extra"] = self.extra
+        return accepted
 
 
 def select_requirement(
@@ -89,8 +103,7 @@ def select_requirement(
     ]
     if not matching:
         raise PaymentRequired(
-            "No 'exact' scheme offering USDC on Base was found in the server's "
-            "accepts array."
+            "No 'exact' scheme offering USDC on Base was found in the server's accepts array."
         )
     return PaymentRequirement.from_dict(matching[0])
 
@@ -177,11 +190,14 @@ def sign_payment(
     requirement: PaymentRequirement,
     *,
     chain_id: int = BASE_CHAIN_ID,
+    resource: dict[str, Any] | None = None,
+    extensions: dict[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
-    """Sign an EIP-3009 authorization and return ``(x_payment_header, payload)``.
+    """Sign an EIP-3009 authorization and return ``(payment_header, payload)``.
 
-    The header value is the base64-encoded JSON x402 payment payload. The
-    payload is also returned so callers can inspect or replay it.
+    The header value is the base64-encoded JSON x402-v2 PaymentPayload. The
+    selected requirement is echoed as ``accepted`` and challenge-level
+    resource metadata and extensions are echoed when supplied.
     """
     account = Account.from_key(private_key)
     authorization = build_authorization(requirement, from_address=account.address)
@@ -194,13 +210,18 @@ def sign_payment(
         signature = "0x" + signature
 
     payload = {
-        "x402Version": 1,
-        "scheme": requirement.scheme,
-        "network": requirement.network,
+        "x402Version": 2,
+        "resource": resource,
+        "accepted": requirement.as_v2_accepted(),
+        "extensions": extensions,
         "payload": {
             "signature": signature,
             "authorization": authorization,
         },
     }
+    if resource is None:
+        payload.pop("resource")
+    if extensions is None:
+        payload.pop("extensions")
     header = base64.b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
     return header, payload
