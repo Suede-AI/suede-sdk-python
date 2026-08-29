@@ -22,4 +22,4 @@ from suede_ai.client import SuedeClient
 from suede_ai.x402 import PaymentRequired, X402Error
 
 __all__ = ["PaymentRequired", "SuedeClient", "X402Error"]
-__version__ = "0.3.1"
+__version__ = "0.4.0"
