@@ -10,10 +10,10 @@ readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Jason Colapietro", email = "jasoncola1@gmail.com" },
+    { name = "Jason Colapietro", email = "info@suedeai.ai" },
 ]
 maintainers = [
-    { name = "Jason Colapietro", email = "jasoncola1@gmail.com" },
+    { name = "Jason Colapietro", email = "info@suedeai.ai" },
 ]
 keywords = [
     "suede",
