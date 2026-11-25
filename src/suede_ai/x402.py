@@ -1,7 +1,7 @@
 """x402 payment helper.
 
 Implements the EIP-3009 ``transferWithAuthorization`` typed-data signing
-used by the Suede AI x402 endpoints. On a 402 challenge from the server,
+used by the Suede x402 endpoints. On a 402 challenge from the server,
 we read the ``accepts`` array, sign an authorization for the canonical
 USDC contract on Base, and replay the request with a ``PAYMENT-SIGNATURE``
 header containing the base64-encoded x402-v2 payload.

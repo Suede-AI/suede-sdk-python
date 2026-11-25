@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![x402](https://img.shields.io/badge/x402-eip--3009-purple)](https://app.suedeai.ai/.well-known/x402.json)
 
-> **A [Suede Labs AI](https://suedeai.ai) project · Built by [Jason Colapietro](https://suedeai.ai/founder)**
+> **A [Suede](https://suedeai.ai) project · Built by [Jason Colapietro](https://suedeai.ai/founder)**
 
-**Python SDK for [Suede Labs AI](https://suedeai.ai)** — x402 pay-per-call music, video, and image generation settled in USDC on Base. The three typed methods below mirror the current public discovery manifest. Legacy convenience helpers remain available for compatible deployments, but they are not current public inventory. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the resource.
+**Python SDK for [Suede](https://suedeai.ai)** — x402 pay-per-call music, video, and image generation settled in USDC on Base. The three typed methods below mirror the current public discovery manifest. Legacy convenience helpers remain available for compatible deployments, but they are not current public inventory. No API keys. No subscriptions. Sign an EIP-3009 authorization and call the resource.
 
 The SDK wraps the 402-challenge / sign / retry loop so your agent code spends its time writing creative prompts, not encoding typed data.
 
@@ -129,4 +129,4 @@ MIT. See [LICENSE](LICENSE).
 
 ---
 
-Built by [Jason Colapietro](https://github.com/JasonColapietro) · [Suede Labs AI](https://suedeai.ai) · [x402 manifest](https://app.suedeai.ai/.well-known/x402.json)
+Built by [Jason Colapietro](https://github.com/JasonColapietro) · [Suede](https://suedeai.ai) · [x402 manifest](https://app.suedeai.ai/.well-known/x402.json)

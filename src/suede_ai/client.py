@@ -1,4 +1,4 @@
-"""SuedeClient — synchronous Python client for the Suede AI x402 surface.
+"""SuedeClient — synchronous Python client for the Suede x402 surface.
 
 The client wraps the 402-challenge / sign / retry loop so callers can spend
 their time writing creative prompts rather than signing EIP-3009 typed data.
@@ -33,7 +33,7 @@ _HEX_HASH_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
 class SuedeClient:
-    """Synchronous client for the Suede AI x402 surface.
+    """Synchronous client for the Suede x402 surface.
 
     Args:
         wallet_private_key: Hex-encoded private key (with or without ``0x`` prefix).

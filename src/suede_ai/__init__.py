@@ -1,6 +1,6 @@
-"""Suede AI Python SDK.
+"""Suede Python SDK.
 
-Python SDK for the current public Suede AI x402 surface: music, video, and
+Python SDK for the current public Suede x402 surface: music, video, and
 image generation settled in USDC on Base. Legacy convenience helpers remain
 available for compatible deployments, but they are not current public inventory.
 The client wraps the EIP-3009 sign-retry loop so callers can spend their

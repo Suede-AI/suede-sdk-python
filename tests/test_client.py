@@ -1,4 +1,4 @@
-"""Tests for the Suede AI SDK scaffold.
+"""Tests for the Suede SDK scaffold.
 
 These tests are offline-only and never call any paid endpoint. We mock the
 402 challenge / paid retry handshake to verify the EIP-3009 typed-data
